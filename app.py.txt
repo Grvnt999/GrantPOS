@@ -1,0 +1,72 @@
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pos_system.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# Database Models
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    stock = db.Column(db.Integer, nullable=False)
+    description = db.Column(db.String(500))
+
+    def __repr__(self):
+        return f"Product('{self.name}', '{self.price}', '{self.stock}')"
+
+class Transaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    total = db.Column(db.Float, nullable=False)
+    profit = db.Column(db.Float, nullable=False)
+    discount = db.Column(db.Float, nullable=False)
+    transaction_id = db.Column(db.String(100), unique=True, nullable=False)
+
+    def __repr__(self):
+        return f"Transaction('{self.transaction_id}', '{self.total}', '{self.profit}')"
+
+# Initialize the database
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
+# Routes
+
+@app.route('/')
+def home():
+    products = Product.query.all()
+    return render_template('index.html', products=products)
+
+@app.route('/add_to_cart/<int:product_id>', methods=['POST'])
+def add_to_cart(product_id):
+    product = Product.query.get(product_id)
+    quantity = int(request.form['quantity'])
+    # You can store this in the session to simulate a cart
+    if product.stock >= quantity:
+        # Add product to cart logic
+        return jsonify(success=True, message="Product added to cart")
+    return jsonify(success=False, message="Not enough stock")
+
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    if request.method == 'POST':
+        # Handle checkout logic and transaction recording
+        total_amount = float(request.form['total'])
+        discount = float(request.form['discount'])
+        profit = total_amount * 0.01  # 1% profit for the business
+
+        # Generate a unique transaction ID
+        transaction_id = f"TXN{str(db.session.query(Transaction).count() + 1)}"
+        transaction = Transaction(total=total_amount, profit=profit, discount=discount, transaction_id=transaction_id)
+        db.session.add(transaction)
+        db.session.commit()
+
+        return redirect(url_for('home'))
+    return render_template('checkout.html')
+
+# Start the app
+if __name__ == "__main__":
+    app.run(debug=True)

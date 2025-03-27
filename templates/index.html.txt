@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System</title>
+</head>
+<body>
+    <h1>Welcome to the POS System</h1>
+    <h2>Products</h2>
+    <div id="product-list">
+        {% for product in products %}
+            <div class="product">
+                <h3>{{ product.name }}</h3>
+                <p>{{ product.description }}</p>
+                <p>Price: ${{ product.price }}</p>
+                <p>Stock: {{ product.stock }}</p>
+                <form action="/add_to_cart/{{ product.id }}" method="POST">
+                    <input type="number" name="quantity" min="1" max="{{ product.stock }}" placeholder="Quantity" required>
+                    <button type="submit">Add to Cart</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+    <a href="{{ url_for('checkout') }}">Go to Checkout</a>
+</body>
+</html>
