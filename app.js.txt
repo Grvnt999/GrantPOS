@@ -1,0 +1,44 @@
+// src/components/ItemsList.js
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+const ItemsList = () => {
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    axios.get('http://localhost:5000/api/items')
+      .then(response => setItems(response.data))
+      .catch(error => console.error('Error fetching items:', error));
+  }, []);
+
+  return (
+    <div>
+      <h1>POS Items</h1>
+      <ul>
+        {items.map(item => (
+          <li key={item.id}>{item.name} - ${item.price}</li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default ItemsList;
+
+
+
+
+
+import React from 'react';
+import './App.css';
+import ItemsList from './components/ItemsList';
+
+function App() {
+  return (
+    <div className="App">
+      <ItemsList />
+    </div>
+  );
+}
+
+export default App;
